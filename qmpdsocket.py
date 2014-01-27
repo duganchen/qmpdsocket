@@ -10,32 +10,15 @@ setapi("QString", 2)
 setapi("QUrl", 2)
 
 
-from PyQt4 import QtCore, QtGui, QtNetwork
-import collections
-import sys
+from PyQt4 import QtCore, QtNetwork
 
 
-def main():
-    app = QtGui.QApplication(sys.argv)
-    view = Window()
-    view.show()
-    sys.exit(app.exec_())
+class ConnectionError(Exception):
+    pass
 
 
-class Window(QtGui.QMainWindow):
-
-    def __init__(self, parent=None):
-        super(Window, self).__init__(parent)
-
-        self.__mpd = QMPDSocket(self)
-        self.__mpd.mpdError.connect(self.printStuff)
-        self.__mpd.connectToHost('localhost', 6600)
-
-    def closeEvent(self, event):
-        self.__mpd.disconnectFromMPD()
-
-    def printStuff(self, text):
-        print text
+class ProtocolError(Exception):
+    pass
 
 
 class QMPDSocket(QtNetwork.QTcpSocket):
@@ -55,12 +38,15 @@ class QMPDSocket(QtNetwork.QTcpSocket):
 
     mpdError = QtCore.pyqtSignal(unicode)
 
+    # Program states. For reading.
     HelloState = 0
 
     def __init__(self, parent=None):
         super(QMPDSocket, self).__init__(parent)
         self.connected.connect(self.onConnect)
         self.readyRead.connect(self.onReadyRead)
+        self.__commandState = self.HelloState
+        self.__responseHandlers = {self.HelloState: self.onHello}
 
     def connectToMPD(self, host, port):
         self.connectToHost(host, port)
@@ -70,12 +56,17 @@ class QMPDSocket(QtNetwork.QTcpSocket):
 
     def onReadyRead(self):
         response = self.readFromMPD()
-        if self.__state == self.HelloState:
-            error = MPDParser.hello_error(response)
-            if error is not None:
-                if error.error_type == 'protocol':
-                    self.disconnectFromHost()
-                self.mpdError.emit(error.msg)
+        handle = self.__responseHandlers[self.__commandState]
+        handle(response)
+
+    def onHello(self, response):
+        try:
+            MPDParser.validate_hello(response)
+        except ProtocolError as e:
+            self.mpdError.emit(str(e))
+        except ConnectionError as e:
+            self.disconnectFromHost()
+            self.mpdError.emit(str(e))
 
     def readFromMPD(self):
         return self.readAll().data().decode('utf-8')
@@ -134,20 +125,12 @@ class MPDParser(object):
             yield obj
 
     @staticmethod
-    def hello_error(line):
+    def validate_hello(line):
         # sample line: u'OK MPD 0.18.0\n'
 
         if not line.endswith('\n'):
-            return MPDError('connection',
-                            'Connection lost while reading MPD hello')
+            raise ConnectionError('Connection lost while reading MPD hello')
 
         if not line.startswith('OK MPD '):
-            return MPDError('protocol',
-                            "Got invalid MPD hello: '{}'".format(line))
-
-
-MPDError = collections.namedtuple('Error', ['error_type', 'msg'])
-
-
-if __name__ == '__main__':
-    main()
+            message = "Got invalid MPD hello: '{}'".format(line)
+            raise ProtocolError(message)
