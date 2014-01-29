@@ -158,3 +158,10 @@ class MPDParser(object):
                 raise ProtocolError("Got unexpected '%s'".format(cls.SUCCESS))
             if not command_list and line != cls.Success:
                 yield line
+
+    @staticmethod
+    def get_pair(cls, line, separator):
+        pair = line.split(separator, 1)
+        if len(pair) < 2:
+            raise ProtocolError("Could not parse pair: '{}'".format(line))
+        yield pair
