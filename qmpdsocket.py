@@ -13,6 +13,10 @@ setapi("QUrl", 2)
 from PyQt4 import QtCore, QtNetwork
 
 
+class CommandError(Exception):
+    pass
+
+
 class ConnectionError(Exception):
     pass
 
@@ -68,8 +72,9 @@ class QMPDSocket(QtNetwork.QTcpSocket):
             self.disconnectFromHost()
             self.mpdError.emit(str(e))
 
-    def readFromMPD(self):
-        return self.readAll().data().decode('utf-8')
+    def readLines(self):
+        lines = self.readAll().data().decode('utf-8').split('\n')
+        return lines
 
     def disconnectFromMPD(self):
         if self.state() == QtNetwork.QTcpSocket.ConnectedState:
@@ -79,6 +84,10 @@ class QMPDSocket(QtNetwork.QTcpSocket):
 class MPDParser(object):
 
     # This is largely extracted from python-mpd2.
+
+    ErrorPrefix = 'ACK '
+    Next = "list_OK"
+    Success = "OK"
 
     @classmethod
     def writable_command(cls, command, *args):
@@ -134,3 +143,18 @@ class MPDParser(object):
         if not line.startswith('OK MPD '):
             message = "Got invalid MPD hello: '{}'".format(line)
             raise ProtocolError(message)
+
+    @classmethod
+    def iter_lines(cls, text, separator, command_list=False):
+
+        if not text.endswith('\n'):
+            raise ConnectionError('Connection lost while reading line')
+
+        for line in text.split('\n')[:-1]:
+            if line.startswith(cls.ErrorPrefix):
+                error = line[len(cls.ErrorPrefix):].strip()
+                raise CommandError(error)
+            if command_list and line == cls.Success:
+                raise ProtocolError("Got unexpected '%s'".format(cls.SUCCESS))
+            if not command_list and line != cls.Success:
+                yield line
