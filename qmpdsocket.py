@@ -83,9 +83,15 @@ class QMPDSocket(QtNetwork.QTcpSocket):
 
 class MPDParser(object):
 
-    # This is largely extracted from python-mpd2.
+    '''
+    Converts socket-writable or socket-read text to and from Python data
+    structures.
+
+    This is adapted from python-mpd2.
+    '''
 
     ErrorPrefix = 'ACK '
+    HelloPrefix = 'OK MPD '
     Next = "list_OK"
     Success = "OK"
 
@@ -134,13 +140,13 @@ class MPDParser(object):
             yield obj
 
     @staticmethod
-    def validate_hello(line):
+    def validate_hello(cls, line):
         # sample line: u'OK MPD 0.18.0\n'
 
         if not line.endswith('\n'):
             raise ConnectionError('Connection lost while reading MPD hello')
 
-        if not line.startswith('OK MPD '):
+        if not line.startswith(cls.HelloPrefix):
             message = "Got invalid MPD hello: '{}'".format(line)
             raise ProtocolError(message)
 
