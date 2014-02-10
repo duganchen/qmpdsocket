@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+from __future__ import (absolute_import, generators, nested_scopes,
+                        print_function, unicode_literals, with_statement)
+
 from sip import setapi
 setapi("QDate", 2)
 setapi("QDateTime", 2)
@@ -35,7 +38,7 @@ class Window(QtGui.QMainWindow):
         self.__mpd.disconnectFromMPD()
 
     def printStuff(self, text):
-        print text
+        print(text)
 
 
 if __name__ == '__main__':

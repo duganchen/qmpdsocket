@@ -14,15 +14,19 @@ from __future__ import (absolute_import, generators, nested_scopes,
                         print_function, unicode_literals, with_statement)
 
 
-class CommandError(Exception):
+class MPDError(Exception):
     pass
 
 
-class ConnectionError(Exception):
+class CommandError(MPDError):
     pass
 
 
-class ProtocolError(Exception):
+class ConnectionError(MPDError):
+    pass
+
+
+class ProtocolError(MPDError):
     pass
 
 

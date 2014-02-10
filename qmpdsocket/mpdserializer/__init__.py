@@ -4,6 +4,9 @@ assert CommandError
 from .mpdserializer import ConnectionError
 assert ConnectionError
 
+from .mpdserializer import MPDError
+assert MPDError
+
 from .mpdserializer import ProtocolError
 assert ProtocolError
 
