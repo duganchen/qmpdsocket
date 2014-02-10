@@ -54,7 +54,6 @@ class QMPDSocket(QtNetwork.QTcpSocket):
         self.__state = self.HelloState
 
     def onReadyRead(self):
-        print('Ready Read')
         response = self.readAll().data().decode('utf-8')
         handle = self.__responseHandlers[self.__commandState]
         handle(response)
@@ -68,7 +67,6 @@ class QMPDSocket(QtNetwork.QTcpSocket):
             self.onConnectionError(unicode(e))
 
     def onCommand(self, responseText):
-        print('On Command')
         self.response.emit(responseText)
 
     def onConnectionError(self, message=None):

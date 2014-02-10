@@ -15,6 +15,7 @@ setapi("QUrl", 2)
 
 from PyQt4 import QtGui
 from qmpdsocket import QMPDSocket
+from pprint import pprint
 import sys
 
 
@@ -46,7 +47,7 @@ class Window(QtGui.QMainWindow):
 
     def onStatusClick(self):
         def on_status(status):
-            print(status)
+            pprint(status)
         status = self.__mpd.status()
         status.data.connect(on_status)
 
