@@ -5,6 +5,8 @@ structures.
 This is adapted from python-mpd2, and decoupled from the socket operations.
 
 It also assumes Python 2, as I won't be testing this on Python 3 for a while.
+That means that all of the _fetch_* methods expect text that's been first
+prepared with .decode('utf-8')
 '''
 
 
@@ -50,6 +52,12 @@ def fetch_nothing(text):
         raise ProtocolError("Got unexpected return value: '{}'".format(line))
 
 
+def fetch_list(text):
+    lines = _iter_lines(text, command_list=False)
+    items = _iter_listitems(lines, separator=': ')
+    return tuple(items)
+
+
 def _command_arg(arg):
     if type(arg) is tuple:
         if len(arg) == 1:
@@ -68,16 +76,27 @@ def _escape(text):
     return text.replace("\\", "\\\\").replace('"', '\\"')
 
 
+def _iter_listitems(lines, separator):
+
+    seen = None
+    for key, value in _iter_pairs(lines, separator):
+        if key != seen:
+            if seen is not None:
+                message = "Expected key '{}', got '{}'".format(seen, key)
+                raise ProtocolError(message)
+            seen = key
+        yield value
+
+
 def _iter_objects(lines, separator, delimiters=[]):
     obj = {}
-    for line in lines:
-        key, value = _get_pair(line, separator)
+    for key, value in _iter_pairs(lines, separator):
         key = key.lower()
         if obj:
-            if key in delimiters:
+            if key.lower() in delimiters:
                 yield obj
                 obj = {}
-            elif key in obj:
+            elif key.lower() in obj:
                 if not isinstance(obj[key], list):
                     obj[key] = [obj[key], value]
                 else:
@@ -108,9 +127,10 @@ def _iter_lines(text, command_list=False):
             yield line
 
 
-def _get_pair(line, separator):
+def _iter_pairs(lines, separator):
 
-    pair = line.split(separator, 1)
-    if len(pair) < 2:
-        raise ProtocolError("Could not parse pair: '{}'".format(line))
-    return pair
+    for line in lines:
+        pair = line.split(separator, 1)
+        if len(pair) < 2:
+            raise ProtocolError("Could not parse pair: '{}'".format(line))
+        yield pair
