@@ -30,6 +30,10 @@ class Window(QtGui.QMainWindow):
     def __init__(self, parent=None):
         super(Window, self).__init__(parent)
 
+        statusButton = QtGui.QPushButton('&Status')
+        statusButton.clicked.connect(self.onStatusClick)
+        self.setCentralWidget(statusButton)
+
         self.__mpd = QMPDSocket(self)
         self.__mpd.mpdError.connect(self.printStuff)
         self.__mpd.connectToHost('localhost', 6600)
@@ -39,6 +43,12 @@ class Window(QtGui.QMainWindow):
 
     def printStuff(self, text):
         print(text)
+
+    def onStatusClick(self):
+        def on_status(status):
+            print(status)
+        status = self.__mpd.status()
+        status.data.connect(on_status)
 
 
 if __name__ == '__main__':

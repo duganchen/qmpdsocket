@@ -24,3 +24,6 @@ assert deserialize_dict
 
 from .mpdserializer import deserialize_songs
 assert deserialize_songs
+
+from .mpdserializer import serialize_command
+assert serialize_command
