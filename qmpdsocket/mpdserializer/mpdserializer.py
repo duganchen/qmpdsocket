@@ -38,14 +38,13 @@ def serialize_command(command, *args):
     return '{}\n'.format(cmdline)
 
 
-def fetch_hello(text):
+def deserialize_hello(text):
     # sample line: u'OK MPD 0.18.0\n'
 
+    if not text.endswith('\n'):
+        raise ConnectionError('Connection lost while reading MPD hello')
+
     for line in _iter_lines(text, command_list=False):
-
-        if not line.endswith('\n'):
-            raise ConnectionError('Connection lost while reading MPD hello')
-
         if not line.startswith(HelloPrefix):
             message = "Got invalid MPD hello: '{}'".format(line)
             raise ProtocolError(message)
