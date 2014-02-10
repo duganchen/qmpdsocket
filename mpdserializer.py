@@ -26,7 +26,7 @@ Next = "list_OK"
 Success = "OK"
 
 
-def writable_command(cls, command, *args):
+def writable_command(command, *args):
     parts = (command,) + tuple(_command_arg(arg) for arg in args)
     cmdline = ' '.join(parts)
     return '{}\n'.format(cmdline)
@@ -50,11 +50,7 @@ def fetch_nothing(text):
         raise ProtocolError("Got unexpected return value: '{}'".format(line))
 
 
-def _test_for_nothing(line):
-    raise ProtocolError("Got unexpected return value: '{}'".format(line))
-
-
-def _command_arg(cls, arg):
+def _command_arg(arg):
     if type(arg) is tuple:
         if len(arg) == 1:
             return '"{}:"'.format(int(arg[0]))
