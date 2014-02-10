@@ -70,6 +70,12 @@ def deserialize_dict(text):
     return {}
 
 
+def deserialize_songs(text):
+
+    lines = _iter_lines(text, command_list=False)
+    return tuple(_iter_objects(lines, separator=': ', delimiters=['file']))
+
+
 def _command_arg(arg):
     if type(arg) is tuple:
         if len(arg) == 1:

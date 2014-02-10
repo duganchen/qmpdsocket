@@ -35,3 +35,11 @@ def test_deserialize_dict():
     expected = {'volume': '63'}
     actual = mpdserializer.deserialize_dict(raw_text)
     eq_(expected, actual)
+
+
+def test_deserialize_songs():
+
+    raw_text = '\n'.join(['file: my-song.ogg', 'Pos: 0', 'Id: 66', 'OK', ''])
+    expected = ({'file': 'my-song.ogg', 'pos': '0', 'id': '66'},)
+    actual = mpdserializer.deserialize_songs(raw_text)
+    eq_(expected, actual)
