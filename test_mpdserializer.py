@@ -3,6 +3,10 @@ As with the code that it's testing, these unit tests are adapted from
 python-mpd2.
 '''
 
+from __future__ import (absolute_import, generators, nested_scopes,
+                        print_function, unicode_literals, with_statement)
+
+
 from . import mpdserializer
 from nose.tools import eq_
 

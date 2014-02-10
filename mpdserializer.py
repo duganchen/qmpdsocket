@@ -10,6 +10,10 @@ prepared with .decode('utf-8')
 '''
 
 
+from __future__ import (absolute_import, generators, nested_scopes,
+                        print_function, unicode_literals, with_statement)
+
+
 class CommandError(Exception):
     pass
 
