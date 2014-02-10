@@ -62,6 +62,14 @@ def deserialize_tuple(text):
     return tuple(items)
 
 
+def deserialize_dict(text):
+
+    lines = _iter_lines(text, command_list=False)
+    for obj in _iter_objects(lines, separator=': ', delimiters=[]):
+        return obj
+    return {}
+
+
 def _command_arg(arg):
     if type(arg) is tuple:
         if len(arg) == 1:
@@ -92,7 +100,7 @@ def _iter_listitems(lines, separator):
         yield value
 
 
-def _iter_objects(lines, separator, delimiters=[]):
+def _iter_objects(lines, separator, delimiters):
     obj = {}
     for key, value in _iter_pairs(lines, separator):
         key = key.lower()

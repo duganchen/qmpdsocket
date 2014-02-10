@@ -18,12 +18,20 @@ def test_serialize_command():
     eq_(expected, actual)
 
 
-def test_fetch_nothing():
+def test_deserialize_nothing():
     eq_(None, mpdserializer.deserialize_nothing('OK\n'))
 
 
-def test_fetch_list():
+def test_deserialize_tuple():
     expected = ('J-Pop', 'Metal')
     raw_text = '\n'.join(['Genre: J-Pop', 'Genre: Metal', 'OK', ''])
     actual = mpdserializer.deserialize_tuple(raw_text)
+    eq_(expected, actual)
+
+
+def test_deserialize_dict():
+
+    raw_text = '\n'.join(['volume: 63', 'OK', ''])
+    expected = {'volume': '63'}
+    actual = mpdserializer.deserialize_dict(raw_text)
     eq_(expected, actual)
