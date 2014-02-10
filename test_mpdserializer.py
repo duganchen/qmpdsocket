@@ -11,19 +11,19 @@ from . import mpdserializer
 from nose.tools import eq_
 
 
-def test_writable_command():
+def test_serialize_command():
 
     expected = 'list "album"\n'
-    actual = mpdserializer.writable_command('list', 'album')
+    actual = mpdserializer.serialize_command('list', 'album')
     eq_(expected, actual)
 
 
 def test_fetch_nothing():
-    eq_(None, mpdserializer.fetch_nothing('OK\n'))
+    eq_(None, mpdserializer.deserialize_nothing('OK\n'))
 
 
 def test_fetch_list():
     expected = ('J-Pop', 'Metal')
     raw_text = '\n'.join(['Genre: J-Pop', 'Genre: Metal', 'OK', ''])
-    actual = mpdserializer.fetch_list(raw_text)
+    actual = mpdserializer.deserialize_tuple(raw_text)
     eq_(expected, actual)

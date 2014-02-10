@@ -32,7 +32,7 @@ Next = "list_OK"
 Success = "OK"
 
 
-def writable_command(command, *args):
+def serialize_command(command, *args):
     parts = (command,) + tuple(_command_arg(arg) for arg in args)
     cmdline = ' '.join(parts)
     return '{}\n'.format(cmdline)
@@ -51,12 +51,12 @@ def fetch_hello(text):
             raise ProtocolError(message)
 
 
-def fetch_nothing(text):
+def deserialize_nothing(text):
     for line in _iter_lines(text, command_list=False):
         raise ProtocolError("Got unexpected return value: '{}'".format(line))
 
 
-def fetch_list(text):
+def deserialize_tuple(text):
     lines = _iter_lines(text, command_list=False)
     items = _iter_listitems(lines, separator=': ')
     return tuple(items)
