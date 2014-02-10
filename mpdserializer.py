@@ -109,8 +109,6 @@ def _iter_objects(lines, separator, delimiters=[]):
 
 def _iter_lines(text, command_list=False):
 
-    # Assumes that text has been prepared with ".decode('utf-8')".
-
     if not text.endswith('\n'):
         raise ConnectionError('Connection lost while reading line')
 
