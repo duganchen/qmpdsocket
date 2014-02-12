@@ -13,7 +13,7 @@ from PyQt4 import QtCore, QtNetwork
 
 from .mpdserializer import (ConnectionError, MPDError, ProtocolError,
                             serialize_command, deserialize_dict,
-                            deserialize_hello)
+                            deserialize_hello, deserialize_tuple)
 
 
 class QMPDSocket(QtNetwork.QTcpSocket):
@@ -21,7 +21,7 @@ class QMPDSocket(QtNetwork.QTcpSocket):
     # idle notifications
     database = QtCore.pyqtSignal()
     update = QtCore.pyqtSignal()
-    stored_playist = QtCore.pyqtSignal()
+    stored_playlist = QtCore.pyqtSignal()
     playlist = QtCore.pyqtSignal()
     player = QtCore.pyqtSignal()
     mixer = QtCore.pyqtSignal()
@@ -36,16 +36,15 @@ class QMPDSocket(QtNetwork.QTcpSocket):
     # For use internally to send data to MPDResponse objects.
     response = QtCore.pyqtSignal(unicode)
 
-    # Program states. For reading.
-    HelloState, CommandState = range(2)
+    # Program states. For determining how to handle socket reads.
+    HelloState, IdleState, CommandState = range(3)
 
     def __init__(self, parent=None):
         super(QMPDSocket, self).__init__(parent)
         self.connected.connect(self.onConnect)
         self.readyRead.connect(self.onReadyRead)
         self.__commandState = self.HelloState
-        self.__responseHandlers = {self.HelloState: self.onHello,
-                                   self.CommandState: self.onCommand}
+        self.__responseHandlers = (self.onHello, self.onIdle, self.onCommand)
 
     def connectToMPD(self, host, port):
         self.connectToHost(host, port)
@@ -66,10 +65,26 @@ class QMPDSocket(QtNetwork.QTcpSocket):
         except ConnectionError as e:
             self.onConnectionError(unicode(e))
 
+        self.idle()
+
+    def onIdle(self, response):
+
+        try:
+            subsystems = deserialize_tuple(response)
+        except ProtocolError as e:
+            self.onMPDError(unicode(e))
+        except ConnectionError as e:
+            self.onConnectionError(unicode(e))
+
+        for subsystem in subsystems:
+            getattr(self, subsystem).emit()
+
+
     def onCommand(self, responseText):
         self.response.emit(responseText)
 
     def onConnectionError(self, message=None):
+        self.write(deserialize_command('noidle'))
         self.disconnectFromHost()
         if message is not None:
             self.onMPDError(message)
@@ -89,6 +104,10 @@ class QMPDSocket(QtNetwork.QTcpSocket):
         response.connectionError.connect(self.onConnectionError)
         self.response.connect(response.onResponse)
         return response
+
+    def idle(self):
+        self.write(serialize_command('idle'))
+        self.__commandState = self.IdleState
 
 
 class MPDResponse(QtCore.QObject):

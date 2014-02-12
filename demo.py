@@ -37,6 +37,19 @@ class Window(QtGui.QMainWindow):
 
         self.__mpd = QMPDSocket(self)
         self.__mpd.mpdError.connect(self.printStuff)
+
+        self.__mpd.database.connect(self.onDatabase)
+        self.__mpd.update.connect(self.onUpdate)
+        self.__mpd.stored_playlist.connect(self.onStoredPlaylist)
+        self.__mpd.playlist.connect(self.onPlaylist)
+        self.__mpd.player.connect(self.onPlayer)
+        self.__mpd.mixer.connect(self.onMixer)
+        self.__mpd.output.connect(self.onOutput)
+        self.__mpd.options.connect(self.onOptions)
+        self.__mpd.sticker.connect(self.onSticker)
+        self.__mpd.subscription.connect(self.onSubscription)
+        self.__mpd.message.connect(self.onMessage)
+
         self.__mpd.connectToHost('localhost', 6600)
 
     def closeEvent(self, event):
@@ -50,6 +63,42 @@ class Window(QtGui.QMainWindow):
             pprint(status)
         status = self.__mpd.status()
         status.data.connect(on_status)
+
+    def onDatabase(self):
+        print('the song database has been modified after update.')
+
+    def onUpdate(self):
+         print('a database update has started or finished.')
+
+    def onStoredPlaylist(self):
+        msg = 'a stored playlist has been modified, renamed, created or '\
+                'deleted'
+        print(msg)
+
+    def onPlaylist(self):
+        print('the current playlist has been modified')
+
+    def onPlayer(self):
+        print('the player has been started, stopped or seeked')
+
+    def onMixer(self):
+        print('the volume has been changed')
+
+    def onOutput(self):
+        print('an audio output has been enabled or disabled')
+
+    def onOptions(self):
+        print('options like repeat, random, crossfade, replay gain')
+
+    def onSticker(self):
+        print('the sticker database has been modified.')
+
+    def onSubscription(self):
+        print('a client has subscribed or unsubscribed to a channel')
+
+    def onMessage(self):
+        print('a message was received on a channel this client is subscribed '
+              'to')
 
 
 if __name__ == '__main__':
